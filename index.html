@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Premium Quiz Trivia & Dashboard</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-canvas: #08080a;
+            --surface-card: #16161a;
+            --surface-row: #24242b;
+            --ios-blue: #0a84ff;
+            --ios-blue-glow: rgba(10, 132, 255, 0.25);
+            --ios-green: #30d158;
+            --ios-red: #ff453a;
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa;
+            --border-line: #2f2f38;
+            --radius-lg: 16px;
+            --radius-sm: 12px;
+            --sf-shadow: 0 12px 24px rgba(0, 0, 0, 0.6);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+            background-color: var(--bg-canvas);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .quiz-container {
+            width: 100%;
+            max-width: 480px;
+            background: linear-gradient(145deg, var(--surface-card), #111115);
+            border: 1px solid var(--border-line);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--sf-shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-line);
+            padding-bottom: 16px;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-title i {
+            color: var(--ios-blue);
+            filter: drop-shadow(0 2px 6px var(--ios-blue-glow));
+        }
+
+        header h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .score-badge {
+            background: rgba(10, 132, 255, 0.12);
+            color: var(--ios-blue);
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(10, 132, 255, 0.25);
+        }
+
+        .search-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .search-input {
+            background-color: var(--surface-row);
+            border: 1px solid var(--border-line);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--ios-blue);
+            box-shadow: 0 0 0 3px var(--ios-blue-glow);
+        }
+
+        .input-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .pill-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .pill {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-line);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .pill:hover {
+            background-color: rgba(10, 132, 255, 0.15);
+            border-color: var(--ios-blue);
+        }
+
+        .progress-container {
+            background-color: var(--surface-row);
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            background: linear-gradient(90deg, var(--ios-blue), #54aeff);
+            height: 100%;
+            width: 0%;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            line-height: 1.4;
+            margin: 8px 0;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background-color: var(--surface-row);
+            border: 1px solid var(--border-line);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            color: var(--text-main);
+            font-size: 1rem;
+            font-weight: 500;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .option-btn:hover {
+            border-color: var(--ios-blue);
+            background-color: rgba(10, 132, 255, 0.04);
+            transform: translateY(-1px);
+        }
+
+        .option-btn.correct {
+            background-color: rgba(48, 209, 88, 0.12);
+            border-color: var(--ios-green);
+            color: var(--ios-green);
+            font-weight: 600;
+        }
+
+        .option-btn.wrong {
+            background-color: rgba(255, 69, 58, 0.12);
+            border-color: var(--ios-red);
+            color: var(--ios-red);
+        }
+
+        .option-btn:disabled {
+            pointer-events: none;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, var(--ios-blue), #0066cc);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(10, 132, 255, 0.25);
+            width: 100%;
+        }
+
+        .secondary-btn {
+            background: transparent;
+            color: var(--ios-blue);
+            border: 1px solid var(--ios-blue);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            width: 100%;
+        }
+
+        .secondary-btn:hover {
+            background: rgba(10, 132, 255, 0.1);
+        }
+
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.1);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border-left-color: var(--ios-blue);
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .result-screen {
+            text-align: center;
+            padding: 24px 10px;
+        }
+
+        .result-emoji {
+            font-size: 4rem;
+            margin-bottom: 14px;
+            display: block;
+        }
+
+        .result-score {
+            font-size: 2.8rem;
+            font-weight: 800;
+            color: var(--ios-blue);
+            margin: 12px 0;
+        }
+
+        .nav-footer {
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid var(--border-line);
+            padding-top: 14px;
+            margin-top: 10px;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            gap: 4px;
+            background: none;
+            border: none;
+        }
+
+        .nav-item.active {
+            color: var(--ios-blue);
+        }
+
+        .history-row {
+            background-color: var(--surface-row);
+            border: 1px solid var(--border-line);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .error-msg {
+            color: var(--ios-red);
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container" id="quizBox"></div>
+
+<script type="module">
+    // Safely reads the private key from your environmental root context setup
+    const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+
+    let loggedInUser = null;
+    let currentTopicTitle = "";
+    let generatedQuestions = [];
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let currentActiveTab = "lobby";
+
+    // Setup Local Databases inside localStorage references
+    if (!localStorage.getItem('quiz_users')) {
+        localStorage.setItem('quiz_users', JSON.stringify({}));
+    }
+
+    // Auto router management checking configuration values
+    const activeSession = localStorage.getItem('quiz_current_session');
+    if (activeSession) {
+        loggedInUser = activeSession;
+        loadSearchLobby();
+    } else {
+        loadAuthScreen(false);
+    }
+
+    // Modern View Renderer attaching explicit event handlers programmatically
+    function loadAuthScreen(isRegisterMode = false) {
+        const container = document.getElementById('quizBox');
+        container.innerHTML = `
+            <header style="justify-content: center;">
+                <div class="header-title">
+                    <i data-lucide="shield-check"></i>
+                    <h1>${isRegisterMode ? "Create Account" : "Account Sign In"}</h1>
+                </div>
+            </header>
+            <div class="search-wrapper">
+                <label class="input-label">Username / Email</label>
+                <input type="text" id="authEmail" class="search-input" placeholder="Enter username" autofocus>
+                
+                <label class="input-label">Password</label>
+                <input type="password" id="authPassword" class="search-input" placeholder="••••••••">
+                <div id="authErrorBlock" class="error-msg" style="margin-top: 4px;"></div>
+            </div>
+            
+            <button class="action-btn" id="submitAuthBtn">${isRegisterMode ? "Register & Enter 🚀" : "Log In Directly 🔑"}</button>
+            <button class="secondary-btn" id="toggleAuthModeBtn">${isRegisterMode ? "Have an account? Sign In" : "Need an account? Sign Up"}</button>
+        `;
+        lucide.createIcons();
+
+        document.getElementById('submitAuthBtn').addEventListener('click', () => executeLocalAuth(isRegisterMode));
+        document.getElementById('toggleAuthModeBtn').addEventListener('click', () => loadAuthScreen(!isRegisterMode));
+    }
+
+    function executeLocalAuth(isRegister) {
+        const username = document.getElementById('authEmail').value.trim();
+        const password = document.getElementById('authPassword').value;
+        const errBlock = document.getElementById('authErrorBlock');
+        errBlock.innerText = "";
+
+        if (!username || !password) {
+            errBlock.innerText = "Please fill in all fields.";
+            return;
+        }
+
+        let users = JSON.parse(localStorage.getItem('quiz_users'));
+
+        if (isRegister) {
+            if (users[username]) {
+                errBlock.innerText = "Username already exists!";
+                return;
+            }
+            users[username] = { password: password, history: [] };
+            localStorage.setItem('quiz_users', JSON.stringify(users));
+            logUserIn(username);
+        } else {
+            if (!users[username] || users[username].password !== password) {
+                errBlock.innerText = "Invalid username or password.";
+                return;
+            }
+            logUserIn(username);
+        }
+    }
+
+    function logUserIn(username) {
+        loggedInUser = username;
+        localStorage.setItem('quiz_current_session', username);
+        loadSearchLobby();
+    }
+
+    function loadSearchLobby() {
+        currentActiveTab = "lobby";
+        const container = document.getElementById('quizBox');
+        container.innerHTML = `
+            <header>
+                <div class="header-title">
+                    <i data-lucide="sparkles"></i>
+                    <h1 style="font-size:1.15rem;">Hi, ${loggedInUser}! 👋</h1>
+                </div>
+                <button class="score-badge" id="logoutBtn" style="cursor:pointer; background:rgba(255,69,58,0.1); border-color:var(--ios-red); color:var(--ios-red);">Logout</button>
+            </header>
+            <div class="search-wrapper">
+                <label class="input-label">What topic do you want to play?</label>
+                <input type="text" id="topicSearchInput" class="search-input" placeholder="e.g., Python, C++, Web Development..." autofocus>
+            </div>
+            <div>
+                <label class="input-label">Popular Suggestions</label>
+                <div class="pill-container">
+                    <div class="pill" data-topic="Python Programming">🐍 Python</div>
+                    <div class="pill" data-topic="C++ Development">⚙️ C++</div>
+                    <div class="pill" data-topic="Web Development">💻 Web Dev</div>
+                    <div class="pill" data-topic="General Knowledge">💡 General Info</div>
+                </div>
+            </div>
+            <button class="action-btn" id="generateQuizBtn">Generate Quiz with AI 🚀</button>
+            ${renderNavigationTabs()}
+        `;
+        lucide.createIcons();
+
+        // Attach setup handlers
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('quiz_current_session');
+            loggedInUser = null;
+            loadAuthScreen(false);
+        });
+
+        document.querySelectorAll('.pill').forEach(pill => {
+            pill.addEventListener('click', (e) => {
+                document.getElementById('topicSearchInput').value = e.currentTarget.getAttribute('data-topic');
+            });
+        });
+
+        document.getElementById('generateQuizBtn').addEventListener('click', initiateAIEngine);
+        setupTabListeners();
+    }
+
+    function loadDashboardScreen() {
+        currentActiveTab = "dashboard";
+        const container = document.getElementById('quizBox');
+        
+        let users = JSON.parse(localStorage.getItem('quiz_users'));
+        let rawHistory = (users[loggedInUser] && users[loggedInUser].history) ? users[loggedInUser].history : [];
+
+        let totalsQuestions = 0;
+        let totalsCorrect = 0;
+        let distinctTopics = new Set();
+
+        rawHistory.forEach(item => {
+            totalsQuestions += item.total;
+            totalsCorrect += item.score;
+            distinctTopics.add(item.topic.toLowerCase());
+        });
+
+        const totalAccuracy = totalsQuestions > 0 ? Math.round((totalsCorrect / totalsQuestions) * 100) : 0;
+
+        container.innerHTML = `
+            <header>
+                <div class="header-title">
+                    <i data-lucide="layout-dashboard"></i>
+                    <h1>Dashboard</h1>
+                </div>
+                <div class="score-badge">Profile: Active</div>
+            </header>
+            
+            <div style="background: var(--surface-row); padding: 16px; border-radius: var(--radius-sm); border:1px solid var(--border-line); display:grid; grid-template-columns: 1fr 1fr; gap:12px; text-align:center;">
+                <div>
+                    <div class="input-label">Accuracy</div>
+                    <div style="font-size:1.8rem; font-weight:800; color:var(--ios-green); margin-top:4px;">${totalAccuracy}%</div>
+                </div>
+                <div>
+                    <div class="input-label">Topics Played</div>
+                    <div style="font-size:1.8rem; font-weight:800; color:var(--ios-blue); margin-top:4px;">${distinctTopics.size}</div>
+                </div>
+            </div>
+
+            <div>
+                <label class="input-label">Topic Activity Log</label>
+                <div style="max-height: 200px; overflow-y: auto; margin-top:8px; display:flex; flex-direction:column; gap:6px;">
+                    ${rawHistory.length === 0 ? `<p style="color:var(--text-muted); font-size:0.9rem; text-align:center; padding: 20px 0;">No history yet. Play a quiz first!</p>` : 
+                      rawHistory.map(h => `
+                        <div class="history-row">
+                            <span style="text-transform: capitalize; font-weight:500;">${h.topic}</span>
+                            <span style="font-size:0.9rem; font-weight:600; color:var(--ios-blue);">${h.score}/${h.total} (${Math.round((h.score/h.total)*100)}%)</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            ${renderNavigationTabs()}
+        `;
+        lucide.createIcons();
+        setupTabListeners();
+    }
+
+    function renderNavigationTabs() {
+        return `
+            <div class="nav-footer">
+                <button class="nav-item ${currentActiveTab === 'lobby' ? 'active' : ''}" id="navLobbyBtn">
+                    <i data-lucide="search" style="width:20px; height:20px;"></i>
+                    <span>Quiz Arena</span>
+                </button>
+                <button class="nav-item ${currentActiveTab === 'dashboard' ? 'active' : ''}" id="navDashBtn">
+                    <i data-lucide="bar-chart-3" style="width:20px; height:20px;"></i>
+                    <span>Dashboard</span>
+                </button>
+            </div>
+        `;
+    }
+
+    function setupTabListeners() {
+        document.getElementById('navLobbyBtn').addEventListener('click', loadSearchLobby);
+        document.getElementById('navDashBtn').addEventListener('click', loadDashboardScreen);
+    }
+
+    async function initiateAIEngine() {
+        let searchTopic = document.getElementById('topicSearchInput').value.trim();
+        if (!searchTopic) searchTopic = "General Knowledge";
+
+        currentTopicTitle = searchTopic;
+        
+        const container = document.getElementById('quizBox');
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px 10px;">
+                <div class="spinner"></div>
+                <h3 style="margin-top:20px;">Generating Questions...</h3>
+                <p style="color: var(--text-muted); font-size:0.9rem;">Gemini AI is crafting questions for <strong>"${searchTopic}"</strong>...</p>
+            </div>
+        `;
+
+        const structuredPrompt = `Generate a quiz about "${searchTopic}". Create exactly 3 distinct multiple choice questions based specifically on this subject matter.`;
+
+        try {
+            if (!GEMINI_API_KEY) {
+                throw new Error("Missing Key structure");
+            }
+
+            const targetEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+            const serverResponse = await fetch(targetEndpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ 
+                    contents: [{ parts: [{ text: structuredPrompt }] }],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "ARRAY",
+                            items: {
+                                type: "OBJECT",
+                                properties: {
+                                    question: { type: "STRING" },
+                                    options: {
+                                        type: "ARRAY",
+                                        items: { type: "STRING" },
+                                        minItems: 4,
+                                        maxItems: 4
+                                    },
+                                    correct: { type: "INTEGER", description: "Index of the correct answer option (0-3)" }
+                                },
+                                required: ["question", "options", "correct"]
+                            }
+                        }
+                    }
+                })
+            });
+
+            const responsePayload = await serverResponse.json();
+            const rawAIText = responsePayload.candidates[0].content.parts[0].text.trim();
+            generatedQuestions = JSON.parse(rawAIText);
+            startQuizInstance();
+        } catch (error) {
+            console.error("AI system fallback applied:", error);
+            loadFallbackQuestions(searchTopic);
+        }
+    }
+
+    function loadFallbackQuestions(searchTopic) {
+        generatedQuestions = [
+            {
+                question: `Which fundamental principle is most essential when developing a workspace focused on ${searchTopic}?`,
+                options: ["Syntax & Structure Consistency", "Ignoring Compiler Warnings", "Using outdated framework packages", "Skipping error handlers entirely"],
+                correct: 0
+            },
+            {
+                question: `What is a primary benefit of using modern structures to scale a ${searchTopic} codebase?`,
+                options: ["Worse execution speeds", "Improved modular reuse and clean code styling", "Increased dependency errors", "Harder deployment debugging steps"],
+                correct: 1
+            },
+            {
+                question: `When running operations related to ${searchTopic}, what is a standard best practice?`,
+                options: ["Writing explicit test evaluations", "Hardcoding production keys publicly", "Avoiding code documentation tracking", "Deactivating modern browser optimization runtime engines"],
+                correct: 0
+            }
+        ];
+        startQuizInstance();
+    }
+
+    function startQuizInstance() {
+        currentQuestionIndex = 0;
+        score = 0;
+        loadQuizScreen();
+    }
+
+    function loadQuizScreen() {
+        const container = document.getElementById('quizBox');
+        if (currentQuestionIndex >= generatedQuestions.length) {
+            saveMetricsAndShowResults();
+            return;
+        }
+
+        const currentCard = generatedQuestions[currentQuestionIndex];
+        const progressPercentage = (currentQuestionIndex / generatedQuestions.length) * 100;
+
+        container.innerHTML = `
+            <header>
+                <div class="header-title">
+                    <i data-lucide="help-circle"></i>
+                    <h1 style="text-transform: capitalize;">${currentTopicTitle}</h1>
+                </div>
+                <div class="score-badge">Progress: ${currentQuestionIndex + 1}/${generatedQuestions.length}</div>
+            </header>
+            <div class="progress-container">
+                <div class="progress-bar" style="width: ${progressPercentage}%"></div>
+            </div>
+            <div class="section-title">🤔 ${currentCard.question}</div>
+            <div class="options-list" id="optionsGroup">
+                ${currentCard.options.map((option, idx) => `
+                    <button class="option-btn" data-idx="${idx}">
+                        <span>${option}</span>
+                        <span class="status-marker"></span>
+                    </button>
+                `).join('')}
+            </div>
+            <button class="action-btn" id="nextBtn" style="display:none; width:100%; margin-top:12px;">
+                Next Question 🚀
+            </button>
+        `;
+        lucide.createIcons();
+
+        // Bind clicks to dynamically made buttons cleanly
+        document.querySelectorAll('#optionsGroup .option-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const selectedIndex = parseInt(e.currentTarget.getAttribute('data-idx'));
+                evaluateSelection(selectedIndex);
+            });
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            currentQuestionIndex++;
+            loadQuizScreen();
+        });
+    }
+
+    function evaluateSelection(selectedIndex) {
+        const currentCard = generatedQuestions[currentQuestionIndex];
+        const buttons = document.getElementById('optionsGroup').children;
+        const nextButton = document.getElementById('nextBtn');
+
+        for (let i = 0; i < buttons.length; i++) {
+            buttons[i].disabled = true;
+            if (i === currentCard.correct) {
+                buttons[i].classList.add('correct');
+                buttons[i].querySelector('.status-marker').innerText = '✅';
+            }
+        }
+
+        if (selectedIndex === currentCard.correct) {
+            score++;
+        } else {
+            buttons[selectedIndex].classList.add('wrong');
+            buttons[selectedIndex].querySelector('.status-marker').innerText = '❌';
+        }
+        nextButton.style.display = 'flex';
+    }
+
+    function saveMetricsAndShowResults() {
+        const container = document.getElementById('quizBox');
+        const totalQuestions = generatedQuestions.length;
+        const percentage = Math.round((score / totalQuestions) * 100);
+
+        let users = JSON.parse(localStorage.getItem('quiz_users'));
+        if (users[loggedInUser]) {
+            users[loggedInUser].history.push({
+                topic: currentTopicTitle,
+                score: score,
+                total: totalQuestions,
+                timestamp: Date.now()
+            });
+            localStorage.setItem('quiz_users', JSON.stringify(users));
+        }
+
+        container.innerHTML = `
+            <div class="result-screen">
+                <span class="result-emoji">🎉</span>
+                <h2>Quiz Completed!</h2>
+                <p style="color: var(--text-muted); margin: 0; text-transform: capitalize;">Topic: "${currentTopicTitle}"</p>
+                <div class="result-score">${score} / ${totalQuestions}</div>
+                <p style="margin-bottom: 24px;">Your accuracy on this session is <strong>${percentage}%</strong></p>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <button class="action-btn" id="resHomeBtn">🔍 Arena Home Screen</button>
+                    <button class="secondary-btn" id="resDashBtn">📊 View Updated Dashboard</button>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('resHomeBtn').addEventListener('click', loadSearchLobby);
+        document.getElementById('resDashBtn').addEventListener('click', loadDashboardScreen);
+    }
+</script>
+</body>
+</html>
